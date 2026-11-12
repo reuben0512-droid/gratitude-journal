@@ -1,5 +1,5 @@
 // Bump this when the app files change so phones pick up the new version.
-const CACHE = 'grateful-v1';
+const CACHE = 'grateful-v2';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

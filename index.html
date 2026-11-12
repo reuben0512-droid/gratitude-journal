@@ -66,6 +66,9 @@
   textarea::placeholder { color: var(--muted); opacity: .7; }
   .thoughts { background: var(--card); border-radius: 18px; padding: 2px 16px; }
   .thoughts textarea { min-height: 140px; }
+  .proud { background: var(--card); border-radius: 18px; padding: 2px 16px; }
+  .card .p { font-size: 15px; line-height: 1.5; margin-top: 8px; }
+  .card .p span, .memory .p span { color: var(--accent); font-weight: 600; }
   .saved { text-align: center; font-size: 13px; color: var(--muted); opacity: 0; transition: opacity .4s; height: 16px; }
   .saved.show { opacity: 1; }
 
@@ -129,6 +132,11 @@
     </div>
 
     <div class="section">
+      <h2>Something I'm proud of</h2>
+      <div class="proud"><textarea id="proud" rows="1" placeholder="Big or small, it counts"></textarea></div>
+    </div>
+
+    <div class="section">
       <h2>Thoughts of the day</h2>
       <div class="thoughts"><textarea id="thoughts" placeholder="What did you notice today?"></textarea></div>
     </div>
@@ -182,6 +190,8 @@ let shownMonth = new Date(); shownMonth.setDate(1);
 /* ---------- Write view ---------- */
 const gInputs = [...document.querySelectorAll('[data-g]')];
 const thoughts = $('#thoughts');
+const proud = $('#proud');
+const allInputs = [...gInputs, proud, thoughts];
 const grow = t => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; };
 
 function renderWrite() {
@@ -192,20 +202,21 @@ function renderWrite() {
   const e = entries[editing] || { g: ['', '', ''], t: '' };
   gInputs.forEach((t, i) => t.value = e.g[i] || '');
   thoughts.value = e.t || '';
-  [...gInputs, thoughts].forEach(grow);
+  proud.value = e.p || '';
+  allInputs.forEach(grow);
   renderMemory(isToday);
 }
 
 let savedTimer;
 function save() {
-  const g = gInputs.map(t => t.value), t = thoughts.value;
-  if (g.every(x => !x.trim()) && !t.trim()) delete entries[editing];
-  else entries[editing] = { g, t, updated: Date.now() };
+  const g = gInputs.map(t => t.value), t = thoughts.value, p = proud.value;
+  if (g.every(x => !x.trim()) && !t.trim() && !p.trim()) delete entries[editing];
+  else entries[editing] = { g, p, t, updated: Date.now() };
   persist();
   const s = $('#saved'); s.classList.add('show');
   clearTimeout(savedTimer); savedTimer = setTimeout(() => s.classList.remove('show'), 1200);
 }
-[...gInputs, thoughts].forEach(t => t.addEventListener('input', () => { grow(t); save(); }));
+allInputs.forEach(t => t.addEventListener('input', () => { grow(t); save(); }));
 
 function renderMemory(isToday) {
   const wrap = $('#memory-wrap');
@@ -219,6 +230,7 @@ function renderMemory(isToday) {
     const items = e.g.filter(x => x.trim());
     $('#memory').innerHTML = `<h2>${y === 1 ? 'One year ago today' : y + ' years ago today'}</h2>`
       + (items.length ? `<div style="font-size:15px;line-height:1.5">${items.map(esc).join(' · ')}</div>` : '')
+      + (e.p?.trim() ? `<div class="p" style="font-size:15px;margin-top:6px"><span>Proud of:</span> ${esc(e.p)}</div>` : '')
       + (e.t?.trim() ? `<div style="font-size:14px;color:var(--muted);margin-top:6px">${esc(e.t.slice(0, 140))}${e.t.length > 140 ? '…' : ''}</div>` : '');
     $('#memory').onclick = () => openEntry(k);
     wrap.hidden = false;
@@ -260,6 +272,7 @@ function renderPast() {
     c.className = 'card';
     c.innerHTML = `<div class="date">${fmt(fromKey(k), { weekday: 'long', day: 'numeric', month: 'long' })}</div>`
       + (items.length ? `<ol>${items.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : '')
+      + (e.p?.trim() ? `<div class="p"><span>Proud of:</span> ${esc(e.p)}</div>` : '')
       + (e.t?.trim() ? `<div class="t">${esc(e.t)}</div>` : '');
     c.onclick = () => openEntry(k);
     $('#list').appendChild(c);
